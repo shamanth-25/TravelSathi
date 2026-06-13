@@ -125,14 +125,16 @@ def get_response(
     if query.startswith("TRANSLATE_PHRASE:"):
         phrase_to_translate = query.replace("TRANSLATE_PHRASE:", "").strip()
         system_prompt = f"""You are TravelSathi, an AI-powered translation assistant.
-Your task is to translate the following phrase into the primary local language spoken in the city of '{city}', which is '{local_lang_name}' (using the '{local_lang_script}' script).
+Your task is to translate the phrase(s) provided into the primary local language spoken in the city of '{city}', which is '{local_lang_name}' (using the '{local_lang_script}' script).
+
+If the input contains multiple phrases (e.g., separated by commas, semicolons, or newlines), you MUST translate each phrase separately and output a dictionary for each in the 'phrases' list.
 
 You must output a valid JSON object exactly in this format:
 {{
     "answer": "Here is the translation:",
     "phrases": [
         {{
-            "phrase": "{phrase_to_translate}",
+            "phrase": "<original phrase>",
             "translation": "<the translation in '{local_lang_name}' using '{local_lang_script}' script>",
             "pronunciation": "<romanized English pronunciation>"
         }}

@@ -210,17 +210,18 @@ if st.button("Translate" if btn_text == 'phrases_translate_button' else btn_text
             
             custom_phrases_list = trans_response.get("phrases", [])
             if custom_phrases_list:
-                p = custom_phrases_list[0]
-                st.markdown(
-                    f"""
-                    <div style="background: rgba(255, 255, 255, 0.05); border-radius: 8px; border: 1px dashed rgba(75, 255, 75, 0.5); padding: 16px; margin-top: 10px;">
-                        <div style="font-size: 0.85rem; color: rgba(255,255,255,0.5); font-weight: bold; text-transform: uppercase;">Translation for "{p.get('phrase', custom_phrase)}"</div>
-                        <div style="font-size: 1.5rem; color: #4BFF4B; font-weight: bold; margin: 10px 0;">{p.get('translation', 'N/A')}</div>
-                        <div style="font-size: 1rem; font-style: italic; color: rgba(255,255,255,0.7);">Pronunciation: {p.get('pronunciation', 'N/A')}</div>
-                    </div>
-                    """,
-                    unsafe_allow_html=True
-                )
+                for p in custom_phrases_list:
+                    phrase_label = p.get('phrase', custom_phrase)
+                    st.markdown(
+                        f"""
+                        <div style="background: rgba(255, 255, 255, 0.05); border-radius: 8px; border: 1px dashed rgba(75, 255, 75, 0.5); padding: 16px; margin-top: 10px;">
+                            <div style="font-size: 0.85rem; color: rgba(255,255,255,0.5); font-weight: bold; text-transform: uppercase;">Translation for "{phrase_label}"</div>
+                            <div style="font-size: 1.5rem; color: #4BFF4B; font-weight: bold; margin: 10px 0;">{p.get('translation', 'N/A')}</div>
+                            <div style="font-size: 1rem; font-style: italic; color: rgba(255,255,255,0.7);">Pronunciation: {p.get('pronunciation', 'N/A')}</div>
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
             else:
                 st.error("Failed to translate the phrase. Please try again.")
     else:

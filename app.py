@@ -74,4 +74,9 @@ st.markdown(
 )
 
 # Run navigation
+st.sidebar.markdown("---")
+st.sidebar.subheader("🔑 API Config Status")
+st.sidebar.markdown(f"**Active Provider**: `{st.session_state.get('provider')}`")
+st.sidebar.markdown(f"**API Key**: `{'Registered ✅' if st.session_state.get('api_key') else 'Empty ❌'}`")
+
 pg.run()

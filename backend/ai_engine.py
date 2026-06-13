@@ -23,10 +23,39 @@ def clean_and_parse_json(text):
         if match:
             cleaned = match.group(1).strip()
             
+    def validate_parsed_data(data):
+        if not data or not isinstance(data, dict):
+            return None
+            
+        answer_str = str(data.get("answer", ""))
+        if "Your highly detailed" in answer_str or "engaging multi-paragraph" in answer_str or "<detailed, comprehensive" in answer_str:
+            logger.warning("Auto-detected literal template placeholder in AI response answer.")
+            return None
+            
+        phrases_list = data.get("phrases", [])
+        if phrases_list and isinstance(phrases_list, list):
+            for p in phrases_list:
+                if isinstance(p, dict):
+                    phrase_val = str(p.get("phrase", ""))
+                    trans_val = str(p.get("translation", ""))
+                    pron_val = str(p.get("pronunciation", ""))
+                    if (
+                        "Meaning in" in phrase_val or
+                        "Phrase in the local language" in trans_val or
+                        "Romanized pronunciation guide" in pron_val or
+                        "<original phrase>" in phrase_val or
+                        "<English phrase>" in phrase_val or
+                        "<translation" in trans_val or
+                        "<romanized" in pron_val
+                    ):
+                        logger.warning("Auto-detected literal template placeholders in AI response phrases.")
+                        return None
+        return data
+
     try:
         # Use strict=False to allow unescaped control characters like literal newlines or tabs
         data = json.loads(cleaned, strict=False)
-        return data
+        return validate_parsed_data(data)
     except json.JSONDecodeError:
         pass
 
@@ -35,7 +64,7 @@ def clean_and_parse_json(text):
     
     try:
         data = json.loads(repaired, strict=False)
-        return data
+        return validate_parsed_data(data)
     except json.JSONDecodeError:
         # Try finding the first '{' and last '}' as a fallback on the repaired text
         try:
@@ -43,7 +72,8 @@ def clean_and_parse_json(text):
             end_idx = repaired.rfind("}")
             if start_idx != -1 and end_idx != -1:
                 json_str = repaired[start_idx:end_idx + 1]
-                return json.loads(json_str, strict=False)
+                data = json.loads(json_str, strict=False)
+                return validate_parsed_data(data)
         except Exception as e:
             logger.error(f"Failed to parse JSON using braces fallback: {str(e)}")
             
@@ -410,17 +440,9 @@ Query: {query}
     else:
         raise ValueError(f"Unsupported provider: '{provider}'. Supported: 'gemini', 'openrouter', 'groq', 'ollama'")
 
-    # 4. Parse and validate the response
     data = clean_and_parse_json(raw_response_text)
-    
     if data is None:
-        logger.warning(f"Could not parse valid JSON from raw response: {raw_response_text}")
-        # Build fallback structure
-        return {
-            "answer": raw_response_text or "No response received.",
-            "phrases": [],
-            "budget": {}
-        }
+        raise ValueError(f"Failed to parse valid JSON response from provider. Raw response: {raw_response_text}")
         
     # Standardize and validate required keys
     standardized_response = {

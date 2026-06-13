@@ -75,6 +75,13 @@ class TestJSONParser(unittest.TestCase):
         self.assertIsNotNone(parsed)
         self.assertIn("Day 1:", parsed["answer"])
 
+    def test_clean_json_reject_placeholders(self):
+        raw_placeholder_answer = '{"answer": "Your highly detailed, comprehensive, and engaging multi-paragraph response...", "phrases": [], "budget": {}}'
+        self.assertIsNone(clean_and_parse_json(raw_placeholder_answer))
+        
+        raw_placeholder_phrase = '{"answer": "Valid answer text", "phrases": [{"phrase": "Meaning in English", "translation": "Phrase in the local language", "pronunciation": "Guide"}], "budget": {}}'
+        self.assertIsNone(clean_and_parse_json(raw_placeholder_phrase))
+
 
 class TestAIEngineRouting(unittest.TestCase):
     @patch("openai.resources.chat.Completions.create")

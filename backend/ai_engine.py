@@ -89,7 +89,7 @@ def get_response(
     # Map city keywords in different languages to their standard key
     city_matches = {
         "hyderabad": ["hyderabad", "హైదరాబాద్", "हैदराबाद"],
-        "varanasi": ["varanasi", "వారణाసి", "वाराणसी"],
+        "varanasi": ["varanasi", "వారణాసి", "वाराणसी"],
         "jaipur": ["jaipur", "జైపూర్", "जयपुर"],
         "mumbai": ["mumbai", "ముంబై", "मुंबई"],
         "kolkata": ["kolkata", "కోల్‌కతా", "कोलकाता"],
@@ -106,6 +106,9 @@ def get_response(
             break
             
     local_lang_name, local_lang_script = city_to_local_lang.get(matched_city_key, ("Hindi", "हिन्दी"))
+
+    # Standardize city to standard capitalized English for RAG and LLM prompts
+    city = matched_city_key.capitalize()
 
     # 1. Retrieve relevant context from RAG
     rag = get_rag_engine()
@@ -271,7 +274,7 @@ Query: {query}
         
         try:
             response = client.chat.completions.create(
-                model="mistralai/mistral-7b-instruct:free", # A fast, high-quality, and often free OpenRouter model
+                model="google/gemini-2.5-flash:free", # A fast, high-quality, and free OpenRouter model
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt}
@@ -299,7 +302,7 @@ Query: {query}
         
         try:
             response = client.chat.completions.create(
-                model="llama-3.3-70b-versatile", # Groq's high quality fast model
+                model="llama-3.1-8b-instant", # Groq's fast and highly-available model with much higher rate limits
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt}

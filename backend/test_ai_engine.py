@@ -61,6 +61,20 @@ class TestJSONParser(unittest.TestCase):
         parsed = clean_and_parse_json(raw)
         self.assertIsNone(parsed)
 
+    def test_clean_json_premature_braces(self):
+        raw = '{"answer": "Welcome to Kolkata, the \'City of Joy\'! Your 3-day itinerary, with a focus on temples..." }, "phrases": [ { "phrase": "Hello" } ], "budget": { "food": 4500 } }'
+        parsed = clean_and_parse_json(raw)
+        self.assertIsNotNone(parsed)
+        self.assertEqual(parsed["answer"], "Welcome to Kolkata, the 'City of Joy'! Your 3-day itinerary, with a focus on temples...")
+        self.assertEqual(parsed["phrases"][0]["phrase"], "Hello")
+        self.assertEqual(parsed["budget"]["food"], 4500)
+
+    def test_clean_json_with_literal_newlines(self):
+        raw = '{\n  "answer": "Day 1:\n- Temple visit\nDay 2:\n- Food",\n  "phrases": [],\n  "budget": {}\n}'
+        parsed = clean_and_parse_json(raw)
+        self.assertIsNotNone(parsed)
+        self.assertIn("Day 1:", parsed["answer"])
+
 
 class TestAIEngineRouting(unittest.TestCase):
     @patch("openai.resources.chat.Completions.create")

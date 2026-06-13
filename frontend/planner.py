@@ -58,6 +58,7 @@ st.markdown("---")
 
 # Output containers
 itinerary_container = st.container()
+phrases_container = st.container()
 budget_container = st.container()
 
 if generate_button:
@@ -87,6 +88,41 @@ if generate_button:
     with itinerary_container:
         st.write(f"### {t('planner_itinerary_header')}")
         st.markdown(response["answer"])
+        
+    with phrases_container:
+        phrases_list = response.get("phrases", [])
+        if phrases_list:
+            st.markdown("<br>", unsafe_allow_html=True)
+            st.write(f"### 🗣️ {t('phrases_header') if t('phrases_header') != 'phrases_header' else 'Useful Local Phrases'}")
+            
+            # Display beautiful cards for phrases
+            cols_per_row = 3
+            for i in range(0, len(phrases_list), cols_per_row):
+                cols = st.columns(cols_per_row)
+                for j in range(cols_per_row):
+                    if i + j < len(phrases_list):
+                        p = phrases_list[i + j]
+                        with cols[j]:
+                            if isinstance(p, dict):
+                                p_phrase = p.get("phrase") or "-"
+                                p_trans = p.get("translation") or p_phrase
+                                p_pron = p.get("pronunciation") or "-"
+                            else:
+                                p_phrase = str(p)
+                                p_trans = str(p)
+                                p_pron = "-"
+                            
+                            st.markdown(
+                                f"""
+                                <div style="background: rgba(255, 255, 255, 0.05); border-radius: 8px; border: 1px dashed rgba(255, 255, 255, 0.15); padding: 16px; min-height: 120px; display: flex; flex-direction: column; justify-content: space-between; margin-bottom: 16px;">
+                                    <div style="font-size: 0.8rem; color: rgba(255,255,255,0.5); font-weight: bold; text-transform: uppercase;">{t('phrases_table_phrase') if t('phrases_table_phrase') != 'phrases_table_phrase' else 'Phrase'}</div>
+                                    <div style="font-size: 0.95rem; font-weight: bold; margin-bottom: 4px;">"{p_phrase}"</div>
+                                    <div style="font-size: 1.10rem; color: #FF4B4B; font-weight: bold; margin-bottom: 4px;">{p_trans}</div>
+                                    <div style="font-size: 0.8rem; font-style: italic; color: rgba(255,255,255,0.7);">{t('phrases_table_pronunciation') if t('phrases_table_pronunciation') != 'phrases_table_pronunciation' else 'Pronunciation'}: {p_pron}</div>
+                                </div>
+                                """,
+                                unsafe_allow_html=True
+                            )
         
     st.markdown("<br>", unsafe_allow_html=True)
     

@@ -24,16 +24,26 @@ def clean_and_parse_json(text):
             cleaned = match.group(1).strip()
             
     try:
-        data = json.loads(cleaned)
+        # Use strict=False to allow unescaped control characters like literal newlines or tabs
+        data = json.loads(cleaned, strict=False)
         return data
     except json.JSONDecodeError:
-        # Try finding the first '{' and last '}' as a fallback
+        pass
+
+    # Heuristic repair for premature closing braces before top-level keys
+    repaired = re.sub(r'\}\s*,\s*"(phrases|budget)"', r', "\1"', cleaned)
+    
+    try:
+        data = json.loads(repaired, strict=False)
+        return data
+    except json.JSONDecodeError:
+        # Try finding the first '{' and last '}' as a fallback on the repaired text
         try:
-            start_idx = cleaned.find("{")
-            end_idx = cleaned.rfind("}")
+            start_idx = repaired.find("{")
+            end_idx = repaired.rfind("}")
             if start_idx != -1 and end_idx != -1:
-                json_str = cleaned[start_idx:end_idx + 1]
-                return json.loads(json_str)
+                json_str = repaired[start_idx:end_idx + 1]
+                return json.loads(json_str, strict=False)
         except Exception as e:
             logger.error(f"Failed to parse JSON using braces fallback: {str(e)}")
             

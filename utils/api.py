@@ -1767,13 +1767,7 @@ def get_response(query, city, language, provider, api_key=None):
                 logger.info(f"Successfully generated response using backend AI ({provider}).")
                 return res
         except Exception as e:
-            logger.warning(f"Backend AI ({provider}) failed. Error: {str(e)}")
-            return {
-                "answer": f"⚠️ API Error ({provider}): {str(e)}",
-                "phrases": [{"phrase": "Error during API call", "translation": f"API Error: {str(e)}", "pronunciation": "N/A"}],
-                "budget": {},
-                "error": str(e)
-            }
+            logger.warning(f"Backend AI ({provider}) failed. Error: {str(e)}. Falling back to mock implementation.")
 
     # 2. Dynamic Mock Fallback Implementation
     city_str = str(city).lower()

@@ -6,9 +6,17 @@ logger = logging.getLogger("api_stub")
 
 # Import the backend AI engine dynamically
 try:
+    import sys
+    import importlib
+    if "backend.ai_engine" in sys.modules:
+        try:
+            importlib.reload(sys.modules["backend.ai_engine"])
+        except Exception as reload_err:
+            logger.warning(f"Could not reload backend.ai_engine: {reload_err}")
     from backend.ai_engine import get_response as get_backend_response
     HAS_BACKEND = True
-except ImportError:
+except Exception as e:
+    logger.warning(f"Could not import backend AI engine ({str(e)}). Using API stub mode.")
     HAS_BACKEND = False
 
 # Detailed dynamic itineraries for the mock fallback

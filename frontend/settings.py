@@ -23,6 +23,7 @@ current_lang_code = st.session_state.get("language", "en")
 current_lang_display = lang_code_to_display.get(current_lang_code, "English")
 current_provider = st.session_state.get("provider", "Gemini")
 current_api_key = st.session_state.get("api_key", "")
+current_ollama_url = st.session_state.get("ollama_url", "http://localhost:11434")
 
 # 1. Language selector
 selected_lang_display = st.selectbox(
@@ -42,16 +43,25 @@ selected_provider = st.selectbox(
     index=provider_options.index(current_provider)
 )
 
-# 3. API Key password input
+# 3. API Key password input (not needed for Ollama or Offline Mock, but keep for simplicity)
 selected_api_key = st.text_input(
     t('settings_api_key'),
     value=current_api_key,
     type="password"
 )
 
+# 4. Ollama Endpoint URL input (conditional on Ollama selection)
+selected_ollama_url = current_ollama_url
+if selected_provider == "Ollama":
+    selected_ollama_url = st.text_input(
+        "Ollama Endpoint URL",
+        value=current_ollama_url,
+        help="Use http://localhost:11434 for local machine, or your public Ngrok tunnel URL (e.g. https://xxx.ngrok.app) for cloud deployment."
+    )
+
 st.markdown("<br>", unsafe_allow_html=True)
 
-# 4. Save button
+# 5. Save button
 if st.button(t('settings_save'), type="primary", use_container_width=True):
     new_lang_code = lang_display_to_code.get(selected_lang_display, "en")
     
@@ -59,6 +69,7 @@ if st.button(t('settings_save'), type="primary", use_container_width=True):
     st.session_state.language = new_lang_code
     st.session_state.provider = selected_provider
     st.session_state.api_key = selected_api_key
+    st.session_state.ollama_url = selected_ollama_url
     
     # Invalidate translations cache to trigger reload of target language
     for key in list(st.session_state.keys()):

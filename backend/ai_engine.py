@@ -317,9 +317,13 @@ Query: {query}
 
 
     elif provider_lower == "ollama":
-        # Local Ollama endpoint
-        ollama_url = os.environ.get("OLLAMA_HOST", "http://localhost:11434")
-        
+        # Check Streamlit session state for endpoint first, with env/localhost fallback
+        try:
+            import streamlit as st
+            ollama_url = st.session_state.get("ollama_url") or os.environ.get("OLLAMA_HOST", "http://localhost:11434")
+        except Exception:
+            ollama_url = os.environ.get("OLLAMA_HOST", "http://localhost:11434")
+            
         # Auto-detect pulled models to select the best one
         model_name = "llama3.2:1b"  # Default fallback
         try:

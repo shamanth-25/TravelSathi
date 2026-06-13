@@ -15,6 +15,8 @@ if "provider" not in st.session_state:
     st.session_state.provider = "Offline Mock"
 if "api_key" not in st.session_state:
     st.session_state.api_key = ""
+if "ollama_url" not in st.session_state:
+    st.session_state.ollama_url = "http://localhost:11434"
 
 # Import localization utility (requires session state initialized first)
 from utils.i18n import t

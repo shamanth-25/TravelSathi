@@ -1,0 +1,54 @@
+stages:
+  - lint
+  - test
+  - security
+
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+
+cache:
+  paths:
+    - .cache/pip
+    - .venv/
+
+linter:
+  stage: lint
+  image: python:3.11-slim
+  script:
+    - pip install ruff
+    - ruff check .
+
+type_checker:
+  stage: lint
+  image: python:3.11-slim
+  script:
+    - pip install mypy types-requests
+    - mypy .
+
+unit_tests:
+  stage: test
+  image: python:3.11-slim
+  script:
+    - pip install -r requirements.txt
+    - pip install pytest pytest-cov
+    - pytest --cov=. --cov-report=term --cov-report=xml
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.xml
+
+secret_scanning:
+  stage: security
+  image:
+    name: zricethezav/gitleaks:latest
+    entrypoint: [""]
+  script:
+    - gitleaks detect --verbose --source .
+
+dependency_audit:
+  stage: security
+  image: python:3.11-slim
+  script:
+    - pip install pip-audit
+    - pip-audit -r requirements.txt

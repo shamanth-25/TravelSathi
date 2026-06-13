@@ -1,9 +1,48 @@
 import streamlit as st
+import re
 from utils.i18n import t
 import utils.api
 import importlib
 importlib.reload(utils.api)
 from utils.api import get_response
+
+def parse_itinerary_into_days(text):
+    if not text:
+        return None, []
+    # Regex to find day markers like:
+    # "Day 1: Title", "Day 1 - Title", "#### Day 1", "**Day 1**", "दिन 1:", "రోజు 1:"
+    # Case insensitive, matches at start of line
+    pattern = r'(?:\n|^)(?:#+\s*|\*+\s*)?(?:Day|दिन|రోజు)\s*\d+.*?(?:\n|$)'
+    
+    matches = list(re.finditer(pattern, text, re.IGNORECASE))
+    
+    if not matches:
+        return None, []
+        
+    intro = text[:matches[0].start()].strip()
+    
+    days = []
+    for i in range(len(matches)):
+        start = matches[i].start()
+        end = matches[i+1].start() if i + 1 < len(matches) else len(text)
+        
+        day_text = text[start:end].strip()
+        
+        # Split day_text into title and content
+        lines = day_text.split('\n', 1)
+        header = lines[0].strip()
+        content = lines[1].strip() if len(lines) > 1 else ""
+        
+        # Clean header (remove markdown symbols like ### or **)
+        header_clean = re.sub(r'^[#*\s:-]+', '', header)
+        header_clean = re.sub(r'[#*\s:-]+$', '', header_clean)
+        
+        days.append({
+            "header": header_clean,
+            "content": content
+        })
+        
+    return intro, days
 
 st.title(f"🗺️ {t('planner_title')}")
 st.write(t('planner_desc'))
@@ -87,7 +126,31 @@ if generate_button:
         
     with itinerary_container:
         st.write(f"### {t('planner_itinerary_header')}")
-        st.markdown(response["answer"])
+        
+        intro, days = parse_itinerary_into_days(response["answer"])
+        if days:
+            if intro:
+                st.markdown(intro)
+                st.markdown("<br>", unsafe_allow_html=True)
+                
+            # Create tabs for each day
+            tab_labels = []
+            for i, d in enumerate(days):
+                day_prefix_match = re.search(r'(Day|दिन|రోజు)\s*\d+', d["header"], re.IGNORECASE)
+                if day_prefix_match:
+                    tab_labels.append(f"📅 {day_prefix_match.group(0)}")
+                else:
+                    tab_labels.append(f"📅 Day {i+1}")
+                    
+            tabs = st.tabs(tab_labels)
+            for i, tab in enumerate(tabs):
+                with tab:
+                    # Show full clean header and the description inside the tab
+                    st.markdown(f"#### {days[i]['header']}")
+                    st.markdown(days[i]['content'])
+        else:
+            # Fallback if parsing fails
+            st.markdown(response["answer"])
         
     with phrases_container:
         phrases_list = response.get("phrases", [])

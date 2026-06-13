@@ -1,6 +1,9 @@
 stages:
   - lint
+  - format
+  - type_check
   - test
+  - coverage
   - security
 
 variables:
@@ -11,22 +14,37 @@ cache:
     - .cache/pip
     - .venv/
 
-linter:
+lint:
   stage: lint
   image: python:3.11-slim
   script:
     - pip install ruff
     - ruff check .
 
-type_checker:
-  stage: lint
+format:
+  stage: format
+  image: python:3.11-slim
+  script:
+    - pip install ruff
+    - ruff format --check .
+
+type_check:
+  stage: type_check
   image: python:3.11-slim
   script:
     - pip install mypy types-requests
     - mypy .
 
-unit_tests:
+test:
   stage: test
+  image: python:3.11-slim
+  script:
+    - pip install -r requirements.txt
+    - pip install pytest
+    - pytest
+
+coverage:
+  stage: coverage
   image: python:3.11-slim
   script:
     - pip install -r requirements.txt

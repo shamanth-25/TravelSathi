@@ -102,11 +102,6 @@ def get_response(
             - 'phrases': Local language phrases.
             - 'budget': Estimated daily costs.
     """
-    provider_lower = str(provider).lower()
-    is_phrase_query = query.startswith("TRANSLATE_PHRASE:") or "useful phrases" in query.lower() or "get phrases" in query.lower()
-    if provider_lower == "ollama" and is_phrase_query:
-        raise ValueError("Ollama phrase translation is bypassed in favor of accurate local offline translation.")
-
     # Map code to full language name (e.g. 'te' -> 'Telugu', 'hi' -> 'Hindi', 'en' -> 'English')
     lang_map = {
         "en": "English",
@@ -179,9 +174,9 @@ You must output a valid JSON object exactly in this format:
     "answer": "Here is the translation:",
     "phrases": [
         {{
-            "phrase": "<original phrase>",
-            "translation": "<the translation in '{local_lang_name}' using '{local_lang_script}' script>",
-            "pronunciation": "<romanized English pronunciation>"
+            "phrase": "Hello",
+            "translation": "নমস্কার",
+            "pronunciation": "Nomoshkar"
         }}
     ],
     "budget": {{}}
@@ -206,12 +201,12 @@ The 'answer' field in your JSON response must contain a brief greeting and overv
 
 You must always output a single, valid JSON object in this format:
 {{
-    "answer": "<brief greeting and introduction to '{local_lang_name}' in '{lang_full}'>",
+    "answer": "Welcome to the language guide!",
     "phrases": [
         {{
-            "phrase": "<English phrase>",
-            "translation": "<translation in '{local_lang_name}' using '{local_lang_script}' script>",
-            "pronunciation": "<romanized English pronunciation>"
+            "phrase": "Hello",
+            "translation": "নమস্কার",
+            "pronunciation": "Nomoshkar"
         }}
     ],
     "budget": {{}}
@@ -272,12 +267,12 @@ CRITICAL INSTRUCTION 3 (JSON FORMAT & LOCAL PHRASES):
 - IMPORTANT: The phrases themselves MUST be in the PRIMARY LOCAL LANGUAGE of the destination city '{city}' (e.g., Telugu for Hyderabad, Rajasthani/Hindi for Jaipur), REGARDLESS of the user's requested language '{lang_full}'!
 
 {{
-    "answer": "Your highly detailed, comprehensive, and engaging multi-paragraph response...",
+    "answer": "Your highly detailed, comprehensive, and engaging response...",
     "phrases": [
         {{
-            "phrase": "Meaning in {lang_full}",
-            "translation": "Phrase in the local language of {city}",
-            "pronunciation": "Romanized pronunciation guide"
+            "phrase": "Hello",
+            "translation": "নమস্কার",
+            "pronunciation": "Nomoshkar"
         }}
     ],
     "budget": {{

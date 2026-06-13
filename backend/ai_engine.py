@@ -274,7 +274,7 @@ Query: {query}
         
         try:
             response = client.chat.completions.create(
-                model="google/gemini-2.5-flash:free", # A fast, high-quality, and free OpenRouter model
+                model="google/gemini-2.5-flash", # A fast and high-quality OpenRouter model
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt}

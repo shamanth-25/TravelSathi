@@ -1,0 +1,12 @@
+streamlit>=1.36.0
+requests
+faiss-cpu
+sentence-transformers
+scikit-learn
+numpy
+pandas
+torch
+transformers
+huggingface-hub
+openai
+google-generativeai

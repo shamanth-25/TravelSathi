@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  travelsathi:
+    build: .
+    container_name: travelsathi_app
+    ports:
+      - "8501:8501"
+    environment:
+      - PYTHONUNBUFFERED=1
+      # Fallback OLLAMA_HOST. On macOS, host.docker.internal allows container to talk to Ollama running on your Mac.
+      - OLLAMA_HOST=http://host.docker.internal:11434
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped

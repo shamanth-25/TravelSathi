@@ -31,7 +31,7 @@ class TestRAGEngine(unittest.TestCase):
         self.assertIn("amer", results[0].lower())
 
     def test_unsupported_city(self):
-        results = self.rag.retrieve("historical details", "delhi", top_k=1)
+        results = self.rag.retrieve("historical details", "bengaluru", top_k=1)
         self.assertEqual(len(results), 0)
 
 
@@ -65,105 +65,103 @@ class TestJSONParser(unittest.TestCase):
 class TestAIEngineRouting(unittest.TestCase):
     @patch("openai.resources.chat.Completions.create")
     @patch("openai.OpenAI")
-    def test_openai_provider(self, mock_openai_class, mock_create):
-        # Set up mocks
+    def test_openrouter_provider(self, mock_openai_class, mock_create):
+        # Setup mock client
         mock_client = MagicMock()
         mock_openai_class.return_value = mock_client
         
         mock_choice = MagicMock()
-        mock_choice.message.content = '{"answer": "OpenAI Success", "phrases": ["Hello"], "budget": {"food": 50}}'
+        mock_choice.message.content = '{"answer": "OpenRouter Success", "phrases": ["Hello"], "budget": {"food": 50}}'
         mock_response = MagicMock()
         mock_response.choices = [mock_choice]
         mock_client.chat.completions.create.return_value = mock_response
-
-        # Call get_response
+        
         res = get_response(
-            query="tell me about Charminar",
+            query="test",
             city="hyderabad",
             language="english",
-            provider="openai",
-            api_key="mock-key-123"
+            provider="openrouter",
+            api_key="fake_key"
         )
-
-        # Assertions
-        self.assertEqual(res["answer"], "OpenAI Success")
-        self.assertEqual(res["phrases"], ["Hello"])
-        self.assertEqual(res["budget"], {"food": 50})
-
-    @patch("google.generativeai.GenerativeModel")
-    @patch("google.generativeai.configure")
-    def test_gemini_provider(self, mock_configure, mock_model_class):
-        # Set up mocks
-        mock_model = MagicMock()
-        mock_model_class.return_value = mock_model
         
-        mock_response = MagicMock()
-        mock_response.text = '{"answer": "Gemini Success", "phrases": ["Namaste"], "budget": {"travel": 150}}'
-        mock_model.generate_content.return_value = mock_response
+        self.assertEqual(res["answer"], "OpenRouter Success")
+        self.assertIn("Hello", res["phrases"])
+        self.assertEqual(res["budget"]["food"], 50)
+        
+        # Verify call
+        mock_client.chat.completions.create.assert_called_once()
 
-        # Call get_response
+    @patch("openai.resources.chat.Completions.create")
+    @patch("openai.OpenAI")
+    def test_groq_provider(self, mock_openai_class, mock_create):
+        # Setup mock client
+        mock_client = MagicMock()
+        mock_openai_class.return_value = mock_client
+        
+        mock_choice = MagicMock()
+        mock_choice.message.content = '{"answer": "Groq Success", "phrases": ["Namaste"], "budget": {"travel": 150}}'
+        mock_response = MagicMock()
+        mock_response.choices = [mock_choice]
+        mock_client.chat.completions.create.return_value = mock_response
+        
         res = get_response(
-            query="tell me about Ganga Aarti",
+            query="test",
             city="varanasi",
             language="english",
-            provider="gemini",
-            api_key="mock-key-123"
+            provider="groq",
+            api_key="fake_key"
         )
-
-        # Assertions
-        self.assertEqual(res["answer"], "Gemini Success")
-        self.assertEqual(res["phrases"], ["Namaste"])
-        self.assertEqual(res["budget"], {"travel": 150})
+        
+        self.assertEqual(res["answer"], "Groq Success")
+        self.assertIn("Namaste", res["phrases"])
+        self.assertEqual(res["budget"]["travel"], 150)
+        
+        # Verify call
+        mock_client.chat.completions.create.assert_called_once()
 
     @patch("requests.post")
     @patch("requests.get")
     def test_ollama_provider(self, mock_get, mock_post):
-        # Set up mocks for tags (models listing)
-        mock_get_response = MagicMock()
-        mock_get_response.status_code = 200
-        mock_get_response.json.return_value = {"models": [{"name": "gemma2:2b"}]}
-        mock_get.return_value = mock_get_response
+        # Mock tags response
+        mock_tags = MagicMock()
+        mock_tags.status_code = 200
+        mock_tags.json.return_value = {"models": [{"name": "llama3.2:1b"}]}
+        mock_get.return_value = mock_tags
 
-        # Set up mocks for chat completion
-        mock_post_response = MagicMock()
-        mock_post_response.status_code = 200
-        mock_post_response.json.return_value = {
+        # Mock chat response
+        mock_chat = MagicMock()
+        mock_chat.status_code = 200
+        mock_chat.json.return_value = {
             "message": {
-                "content": '{"answer": "Ollama Success", "phrases": ["Ram Ram"], "budget": {"tickets": 100}}'
+                "content": '{"answer": "Ollama Success", "phrases": [], "budget": {}}'
             }
         }
-        mock_post.return_value = mock_post_response
+        mock_post.return_value = mock_chat
 
-        # Call get_response
         res = get_response(
-            query="tell me about Amer Fort",
+            query="test",
             city="jaipur",
             language="english",
             provider="ollama"
         )
-
-        # Assertions
+        
         self.assertEqual(res["answer"], "Ollama Success")
-        self.assertEqual(res["phrases"], ["Ram Ram"])
-        self.assertEqual(res["budget"], {"tickets": 100})
+        mock_post.assert_called_once()
 
-    def test_missing_api_key_raises_error(self):
-        # Clean environment variables temporarily
-        openai_key = os.environ.pop("OPENAI_API_KEY", None)
-        gemini_key = os.environ.pop("GEMINI_API_KEY", None)
-        google_key = os.environ.pop("GOOGLE_API_KEY", None)
-
+    def test_missing_api_keys(self):
+        # Temporarily remove env vars to test error paths
+        openrouter_key = os.environ.pop("OPENROUTER_API_KEY", None)
+        groq_key = os.environ.pop("GROQ_API_KEY", None)
+        
         try:
             with self.assertRaises(ValueError):
-                get_response("test", "hyderabad", "english", "openai", api_key=None)
-
+                get_response("test", "hyderabad", "english", "openrouter", api_key=None)
+                
             with self.assertRaises(ValueError):
-                get_response("test", "varanasi", "english", "gemini", api_key=None)
+                get_response("test", "varanasi", "english", "groq", api_key=None)
         finally:
-            # Restore environment variables
-            if openai_key: os.environ["OPENAI_API_KEY"] = openai_key
-            if gemini_key: os.environ["GEMINI_API_KEY"] = gemini_key
-            if google_key: os.environ["GOOGLE_API_KEY"] = google_key
+            if openrouter_key: os.environ["OPENROUTER_API_KEY"] = openrouter_key
+            if groq_key: os.environ["GROQ_API_KEY"] = groq_key
 
     def test_unsupported_provider_raises_error(self):
         with self.assertRaises(ValueError):

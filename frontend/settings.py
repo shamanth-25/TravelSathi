@@ -32,10 +32,14 @@ selected_lang_display = st.selectbox(
 )
 
 # 2. AI Provider selector
+provider_options = ["Gemini", "Ollama", "Groq", "OpenRouter", "Offline Mock"]
+if current_provider not in provider_options:
+    current_provider = "Offline Mock"
+
 selected_provider = st.selectbox(
     t('settings_provider'),
-    options=["Ollama", "Gemini", "OpenAI"],
-    index=["Ollama", "Gemini", "OpenAI"].index(current_provider)
+    options=provider_options,
+    index=provider_options.index(current_provider)
 )
 
 # 3. API Key password input

@@ -12,7 +12,7 @@ st.set_page_config(
 if "language" not in st.session_state:
     st.session_state.language = "en"
 if "provider" not in st.session_state:
-    st.session_state.provider = "Gemini"
+    st.session_state.provider = "Offline Mock"
 if "api_key" not in st.session_state:
     st.session_state.api_key = ""
 

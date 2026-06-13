@@ -113,7 +113,7 @@ class RAGEngine:
             kb_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "knowledge_base")
         
         self.kb_dir = kb_dir
-        self.supported_cities = ["hyderabad", "varanasi", "jaipur"]
+        self.supported_cities = ["hyderabad", "varanasi", "jaipur", "mumbai", "kolkata", "delhi", "chennai", "ahmedabad"]
         
         # Documents grouped by city
         self.city_documents = {city: [] for city in self.supported_cities}

@@ -1,5 +1,8 @@
 import streamlit as st
 from utils.i18n import t
+import utils.api
+import importlib
+importlib.reload(utils.api)
 from utils.api import get_response
 
 st.title(f"🗺️ {t('planner_title')}")
@@ -13,7 +16,16 @@ col1, col2 = st.columns(2)
 with col1:
     destination = st.selectbox(
         t('planner_destination'),
-        options=[t('dest_hyderabad_name'), t('dest_varanasi_name'), t('dest_jaipur_name')],
+        options=[
+            t('dest_hyderabad_name'), 
+            t('dest_varanasi_name'), 
+            t('dest_jaipur_name'),
+            t('dest_mumbai_name'),
+            t('dest_kolkata_name'),
+            t('dest_delhi_name'),
+            t('dest_chennai_name'),
+            t('dest_ahmedabad_name')
+        ],
         index=0
     )
     
@@ -54,8 +66,13 @@ if generate_button:
     
     # Retrieve language code
     lang_code = st.session_state.get("language", "en")
-    provider = st.session_state.get("provider", "Gemini")
+    provider = st.session_state.get("provider", "Groq")
     api_key = st.session_state.get("api_key", None)
+    
+    import os
+    if provider.lower() in ["groq", "openrouter", "gemini"] and not api_key and not os.environ.get("GEMINI_API_KEY") and not os.environ.get("GOOGLE_API_KEY"):
+        st.error(f"⚠️ An API key is required to use {provider}. Please enter your {provider} API key in the Settings page.")
+        st.stop()
     
     # Call the frontend stub get_response
     with st.spinner("Analyzing destination and preparing itinerary..."):
@@ -76,17 +93,33 @@ if generate_button:
     with budget_container:
         st.write(f"### {t('planner_budget_header')}")
         
+        # Scale LLM budget to match the user's total budget exactly
+        normalized_budget = {}
+        for cat, val in response.get("budget", {}).items():
+            try:
+                normalized_budget[cat] = float(val)
+            except:
+                pass
+                
+        total_llm_amount = sum(normalized_budget.values())
+        if total_llm_amount > 0:
+            for cat, amt in normalized_budget.items():
+                response["budget"][cat] = (amt / total_llm_amount) * budget
+        else:
+            response["budget"] = {"Estimated Allocation": budget}
+
         # Display chart & metrics
         b_col1, b_col2 = st.columns([2, 3])
         
         with b_col1:
-            st.write(f"#### {t('planner_est_allocation')}")
-            for category, percentage in response["budget"].items():
-                allocated_amount = (budget * percentage) / 100
-                st.markdown(
-                    f"**{category}**: {percentage}% (~₹{allocated_amount:,.2f})"
+            st.subheader("Estimated Allocation")
+            for category, amount in response["budget"].items():
+                percentage = (amount / budget) * 100
+                st.write(
+                    f"{category}: {percentage:.0f}% (₹{amount:,.2f})"
                 )
-                st.progress(percentage / 100)
+                # Ensure progress bar value is between 0.0 and 1.0
+                st.progress(min(max(amount / budget, 0.0), 1.0))
                 
         with b_col2:
             st.write(f"#### {t('planner_alloc_chart')}")

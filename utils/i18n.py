@@ -21,7 +21,7 @@ def load_translations(lang):
         except Exception:
             return {}
 
-def t(key):
+def t(key, default=None):
     """
     Retrieve translated string based on the language saved in st.session_state.
     Uses cached translation dictionary in st.session_state to avoid disk I/O.
@@ -43,4 +43,4 @@ def t(key):
         st.session_state[cache_key] = load_translations(lang)
         
     trans_dict = st.session_state[cache_key]
-    return trans_dict.get(key, key)
+    return trans_dict.get(key, default if default else key)

@@ -8,6 +8,6 @@ services:
       - PYTHONUNBUFFERED=1
       # Fallback OLLAMA_HOST. On macOS, host.docker.internal allows container to talk to Ollama running on your Mac.
       - OLLAMA_HOST=http://host.docker.internal:11434
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+    volumes:
+      - .:/app
     restart: unless-stopped

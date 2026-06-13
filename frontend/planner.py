@@ -123,10 +123,10 @@ if generate_button:
                 
         with b_col2:
             st.write(f"#### {t('planner_alloc_chart')}")
-            # Present a clean bar chart representing the budget breakdown
+            # Present a clean bar chart representing the budget breakdown in percentages
             chart_data = {
                 t('planner_category'): list(response["budget"].keys()),
-                t('planner_alloc_pct'): list(response["budget"].values())
+                t('planner_alloc_pct'): [(amount / budget) * 100 for amount in response["budget"].values()]
             }
             st.bar_chart(data=chart_data, x=t('planner_category'), y=t('planner_alloc_pct'), horizontal=True)
 

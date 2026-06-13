@@ -1,0 +1,13 @@
+stages:
+  - lint
+  - test
+
+lint:
+  stage: lint
+  script:
+    - echo "Lint stage completed"
+
+test:
+  stage: test
+  script:
+    - echo "Test stage completed"

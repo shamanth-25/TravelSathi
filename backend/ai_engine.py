@@ -102,6 +102,11 @@ def get_response(
             - 'phrases': Local language phrases.
             - 'budget': Estimated daily costs.
     """
+    provider_lower = str(provider).lower()
+    is_phrase_query = query.startswith("TRANSLATE_PHRASE:") or "useful phrases" in query.lower() or "get phrases" in query.lower()
+    if provider_lower == "ollama" and is_phrase_query:
+        raise ValueError("Ollama phrase translation is bypassed in favor of accurate local offline translation.")
+
     # Map code to full language name (e.g. 'te' -> 'Telugu', 'hi' -> 'Hindi', 'en' -> 'English')
     lang_map = {
         "en": "English",
